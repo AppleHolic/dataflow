@@ -1,4 +1,4 @@
-from .base import NetworkImages
+from base import NetworkImages
 
 import os
 import ujson as json
@@ -53,10 +53,18 @@ if __name__ == '__main__':
                         help='licence key')
     parser.add_argument('--name', type=str, default='train',
                         help='train or valid')
+    parser.add_argument('--is_gevent', type=bool, default=False, help='select gevent threaded parallel')
+    parser.add_argument('--nr_proc', type=int, default=2)
+    parser.add_argument('--num_threads', type=int, default=32)
+
     args = parser.parse_args()
 
-    ds = ILSVRC12(args.service_code, args.name).parallel(num_threads=32)
+    ds = ILSVRC12(args.service_code, args.name, shuffle=False)
+    if args.is_gevent:
+        ds = ds.parallel_gevent(num_threads=args.num_threads)
+    else:
+        ds = ds.parallel(num_threads=args.num_threads)
     if args.name in ['train', 'training']:
-        ds = df.PrefetchDataZMQ(ds, nr_proc=2)
+        ds = df.PrefetchDataZMQ(ds, nr_proc=args.nr_proc)
     
     df.TestDataSpeed(ds, size=5000).start()
