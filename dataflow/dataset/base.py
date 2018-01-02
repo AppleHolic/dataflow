@@ -34,6 +34,9 @@ class NetworkImages(RNGDataFlow):
                     time.sleep(0.05)
                     continue
                 return resp.content
+            except requests.ConnectionError as ce:
+                logger.warning('Connection Aborted : %s, url : %s' % (str(ce), url))
+                time.sleep(0.5)
             except Exception as e:
                 logger.warning('request failed error=%s url=%s' % (str(e), url))
         return None
